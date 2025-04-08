@@ -3,38 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>List Generator</title>
+    <title>Requisition Form - Stationery Items</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        .item-row { margin: 10px 0; }
-        button { margin: 5px; padding: 5px 10px; }
-        input, select { margin: 5px; padding: 5px; }
-        h1, h2 { color: #333; }
+        .header { text-align: center; border: 2px solid #ff9800; padding: 10px; background-color: #fff3e0; }
+        .header h1 { margin: 0; color: #333; }
+        .header h2 { margin: 5px 0 0; color: #555; }
+        .form-section { margin: 20px 0; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        input, select { padding: 5px; width: 150px; border: 1px solid #ccc; }
+        button { padding: 5px 10px; background-color: #ff9800; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #e68900; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        .footer { margin-top: 20px; display: flex; justify-content: space-between; }
+        .footer div { border: 1px solid #ccc; padding: 10px; width: 45%; }
     </style>
 </head>
 <body>
-    <h1>List Generator</h1>
-    <div>
-        <input id="sr" placeholder="SR" />
-        <input id="dated" placeholder="Date (e.g., 27-Mar-25)" />
-        <select id="department">
-            <option value="">Select Department</option>
-            <option value="WAREHOUSE">WAREHOUSE</option>
-            <option value="Gate">Gate</option>
-            <option value="Rail Ops">Rail Ops</option>
-            <option value="Doc Cell">Doc Cell</option>
-            <option value="Admin">Admin</option>
-            <option value="Security">Security</option>
-        </select>
-        <select id="type">
-            <option value="">Select Type</option>
-            <option value="STATIONERY ITEM">STATIONERY ITEM</option>
-        </select>
+    <div class="header">
+        <h1>Hind Terminals Pvt Ltd, ICD Kilaraipur, Ludhiana Punjab</h1>
+        <h2>Requisition Form for Stationery Items</h2>
     </div>
-    <h2>Items</h2>
-    <div id="items">
-        <div class="item-row">
-            <select class="item-name">
+
+    <div class="form-section">
+        <div class="input-group">
+            <input id="sr" placeholder="SR" readonly />
+            <input type="date" id="dated" />
+            <select id="department">
+                <option value="">Select Department</option>
+                <option value="WAREHOUSE">WAREHOUSE</option>
+                <option value="Gate">Gate</option>
+                <option value="Rail Ops">Rail Ops</option>
+                <option value="Doc Cell">Doc Cell</option>
+                <option value="Admin">Admin</option>
+                <option value="Security">Security</option>
+            </select>
+            <select id="type">
+                <option value="">Select Type</option>
+                <option value="STATIONERY ITEM">STATIONERY ITEM</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <select id="item-name">
                 <option value="">Select Item</option>
                 <option value="Paper Punch">Paper Punch</option>
                 <option value="Pen Stand">Pen Stand</option>
@@ -63,8 +75,8 @@
                 <option value="Whiteboard Markers">Whiteboard Markers</option>
                 <option value="Binder Clips">Binder Clips</option>
             </select>
-            <input class="req-qnty" placeholder="Req Qty" />
-            <select class="qnty-type">
+            <input id="req-qnty" placeholder="Req Qty" />
+            <select id="qnty-type">
                 <option value="">Select Qty Type</option>
                 <option value="PCS">PCS</option>
                 <option value="Ltr">Ltr</option>
@@ -72,66 +84,124 @@
                 <option value="Pair">Pair</option>
                 <option value="KG">KG</option>
             </select>
-            <input class="remarks" placeholder="Remarks" />
+            <input id="remarks" placeholder="Remarks" />
+            <button onclick="addItem()">Add Item</button>
+        </div>
+        <table id="items-table">
+            <thead>
+                <tr>
+                    <th>SR</th>
+                    <th>DATED</th>
+                    <th>DEPARTMENT</th>
+                    <th>TYPE</th>
+                    <th>ITEM NAME</th>
+                    <th>REQ QNTY</th>
+                    <th>QNTY TYPE</th>
+                    <th>REMARKS</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div>
+            <button onclick="generateCSV()">Generate CSV</button>
+            <button onclick="generateExcel()">Generate Excel</button>
+            <button onclick="printList()">Print</button>
+            <button onclick="emailList()">Email</button>
         </div>
     </div>
-    <button onclick="addItem()">Add Item</button>
-    <div>
-        <button onclick="generateCSV()">Generate CSV</button>
-        <button onclick="generateExcel()">Generate Excel</button>
-        <button onclick="printList()">Print</button>
-        <button onclick="emailList()">Email</button>
+
+    <div class="footer">
+        <div>Name / Signature</div>
+        <div>Approval Deptt. Head</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
+        let srCounter = 1; // Auto-incrementing SR number
+
+        // Set initial SR value
+        document.getElementById('sr').value = srCounter;
+
+        // Function to format date as DD-MMM-YY
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const day = String(date.getDate()).padStart(2, '0');
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = monthNames[date.getMonth()];
+            const year = String(date.getFullYear()).slice(-2);
+            return `${day}-${month}-${year}`;
+        }
+
         function addItem() {
-            const itemsDiv = document.getElementById('items');
-            const newRow = itemsDiv.children[0].cloneNode(true);
-            newRow.querySelector('.item-name').value = '';
-            newRow.querySelector('.req-qnty').value = '';
-            newRow.querySelector('.qnty-type').value = '';
-            newRow.querySelector('.remarks').value = '';
-            itemsDiv.appendChild(newRow);
+            const sr = document.getElementById('sr').value;
+            const datedRaw = document.getElementById('dated').value;
+            const dated = formatDate(datedRaw);
+            const department = document.getElementById('department').value;
+            const type = document.getElementById('type').value;
+            const itemName = document.getElementById('item-name').value;
+            const reqQnty = document.getElementById('req-qnty').value;
+            const qntyType = document.getElementById('qnty-type').value;
+            const remarks = document.getElementById('remarks').value;
+
+            if (!datedRaw || !department || !type || !itemName || !reqQnty || !qntyType) {
+                alert('Please fill all fields before adding an item.');
+                return;
+            }
+
+            const tableBody = document.querySelector('#items-table tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${sr}</td>
+                <td>${dated}</td>
+                <td>${department}</td>
+                <td>${type}</td>
+                <td>${itemName}</td>
+                <td>${reqQnty}</td>
+                <td>${qntyType}</td>
+                <td>${remarks}</td>
+            `;
+            tableBody.appendChild(row);
+
+            // Clear item inputs for next entry
+            document.getElementById('item-name').value = '';
+            document.getElementById('req-qnty').value = '';
+            document.getElementById('qnty-type').value = '';
+            document.getElementById('remarks').value = '';
         }
 
         function getListData() {
-            const sr = document.getElementById('sr').value;
-            const dated = document.getElementById('dated').value;
-            const department = document.getElementById('department').value;
-            const type = document.getElementById('type').value;
-            const items = Array.from(document.querySelectorAll('.item-row')).map(row => ({
-                itemName: row.querySelector('.item-name').value,
-                reqQnty: row.querySelector('.req-qnty').value,
-                qntyType: row.querySelector('.qnty-type').value,
-                remarks: row.querySelector('.remarks').value
-            }));
-            return items.map(item => [sr, dated, department, type, item.itemName, item.reqQnty, item.qntyType, item.remarks]);
+            const rows = Array.from(document.querySelectorAll('#items-table tbody tr'));
+            return rows.map(row => Array.from(row.cells).map(cell => cell.textContent));
         }
 
         function generateCSV() {
             const headers = ['SR,DATED,DEPARTMENT,TYPE,ITEM NAME,REQ QNTY,QNTY TYPE,REMARKS'];
             const data = getListData().map(row => row.join(','));
             const csv = headers.concat(data).join('\n');
-            downloadFile(csv, 'list.csv', 'text/csv');
+            downloadFile(csv, 'requisition.csv', 'text/csv');
+            resetForm();
         }
 
         function generateExcel() {
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet([['SR', 'DATED', 'DEPARTMENT', 'TYPE', 'ITEM NAME', 'REQ QNTY', 'QNTY TYPE', 'REMARKS']].concat(getListData()));
-            XLSX.utils.book_append_sheet(wb, ws, 'List');
-            XLSX.writeFile(wb, 'list.xlsx');
+            XLSX.utils.book_append_sheet(wb, ws, 'Requisition');
+            XLSX.writeFile(wb, 'requisition.xlsx');
+            resetForm();
         }
 
         function printList() {
             window.print();
+            resetForm();
         }
 
         function emailList() {
             const data = getListData();
             const csv = ['SR,DATED,DEPARTMENT,TYPE,ITEM NAME,REQ QNTY,QNTY TYPE,REMARKS'].concat(data.map(row => row.join(','))).join('\n');
-            const mailto = `mailto:vikram.singh@hindterminals.com?subject=Request%20List&body=Please%20find%20the%20list%20attached.%0A%0A${encodeURIComponent(csv)}`;
+            const mailto = `mailto:vikram.singh@hindterminals.com?subject=Requisition%20Form%20-%20Stationery%20Items&body=Please%20find%20the%20requisition%20list%20attached.%0A%0A${encodeURIComponent(csv)}`;
             window.location.href = mailto;
+            resetForm();
         }
 
         function downloadFile(content, fileName, mimeType) {
@@ -142,6 +212,19 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        function resetForm() {
+            srCounter++;
+            document.getElementById('sr').value = srCounter;
+            document.getElementById('dated').value = '';
+            document.getElementById('department').value = '';
+            document.getElementById('type').value = '';
+            document.getElementById('item-name').value = '';
+            document.getElementById('req-qnty').value = '';
+            document.getElementById('qnty-type').value = '';
+            document.getElementById('remarks').value = '';
+            document.querySelector('#items-table tbody').innerHTML = '';
         }
     </script>
 </body>
