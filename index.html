@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .item-row { margin: 10px 0; }
+        button { margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>List Generator</h1>
+    <div>
+        <input id="sr" placeholder="SR" />
+        <input id="dated" placeholder="Date (e.g., 27-Mar-25)" />
+        <select id="department">
+            <option value="">Select Department</option>
+            <option value="WAREHOUSE">WAREHOUSE</option>
+            <option value="Gate">Gate</option>
+            <option value="Rail Ops">Rail Ops</option>
+            <option value="Doc Cell">Doc Cell</option>
+            <option value="Admin">Admin</option>
+            <option value="Security">Security</option>
+        </select>
+        <select id="type">
+            <option value="">Select Type</option>
+            <option value="STATIONERY ITEM">STATIONERY ITEM</option>
+        </select>
+    </div>
+    <h2>Items</h2>
+    <div id="items">
+        <div class="item-row">
+            <select class="item-name">
+                <option value="">Select Item</option>
+                <option value="Paper Punch">Paper Punch</option>
+                <option value="Pen Stand">Pen Stand</option>
+                <option value="Pencils">Pencils</option>
+                <option value="Permanent Markers">Permanent Markers</option>
+                <!-- Add all items from your master list here -->
+            </select>
+            <input class="req-qnty" placeholder="Req Qty" />
+            <select class="qnty-type">
+                <option value="">Select Qty Type</option>
+                <option value="PCS">PCS</option>
+                <option value="Ltr">Ltr</option>
+                <option value="DZN">DZN</option>
+                <option value="Pair">Pair</option>
+                <option value="KG">KG</option>
+            </select>
+            <input class="remarks" placeholder="Remarks" />
+        </div>
+    </div>
+    <button onclick="addItem()">Add Item</button>
+    <div>
+        <button onclick="generateCSV()">Generate CSV</button>
+        <button onclick="generateExcel()">Generate Excel</button>
+        <button onclick="printList()">Print</button>
+        <button onclick="emailList()">Email</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        const masterData = {
+            departments: ['WAREHOUSE', 'Gate', 'Rail Ops', 'Doc Cell', 'Admin', 'Security'],
+            types: ['STATIONERY ITEM'],
+            itemNames: ['Paper Punch', 'Pen Stand', 'Pencils', 'Permanent Markers', /* Add all items */],
+            qntyTypes: ['PCS', 'Ltr', 'DZN', 'Pair', 'KG']
+        };
+
+        function addItem() {
+            const itemsDiv = document.getElementById('items');
+            const newRow = itemsDiv.children[0].cloneNode(true);
+            newRow.querySelector('.item-name').value = '';
+            newRow.querySelector('.req-qnty').value = '';
+            newRow.querySelector('.qnty-type').value = '';
+            newRow.querySelector('.remarks').value = '';
+            itemsDiv.appendChild(newRow);
+        }
+
+        function getListData() {
+            const sr = document.getElementById('sr').value;
+            const dated = document.getElementById('dated').value;
+            const department = document.getElementById('department').value;
+            const type = document.getElementById('type').value;
+            const items = Array.from(document.querySelectorAll('.item-row')).map(row => ({
+                itemName: row.querySelector('.item-name').value,
+                reqQnty: row.querySelector('.req-qnty').value,
+                qntyType: row.querySelector('.qnty-type').value,
+                remarks: row.querySelector('.remarks').value
+            }));
+            return items.map(item => [sr, dated, department, type, item.itemName, item.reqQnty, item.qntyType, item.remarks]);
+        }
+
+        function generateCSV() {
+            const headers = ['SR,DATED,DEPARTMENT,TYPE,ITEM NAME,REQ QNTY,QNTY TYPE,REMARKS'];
+            const data = getListData().map(row => row.join(','));
+            const csv = headers.concat(data).join('\n');
+            downloadFile(csv, 'list.csv', 'text/csv');
+        }
+
+        function generateExcel() {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([['SR', 'DATED', 'DEPARTMENT', 'TYPE', 'ITEM NAME', 'REQ QNTY', 'QNTY TYPE', 'REMARKS']].concat(getListData()));
+            XLSX.utils.book_append_sheet(wb, ws, 'List');
+            XLSX.writeFile(wb, 'list.xlsx');
+        }
+
+        function printList() {
+            window.print();
+        }
+
+        function emailList() {
+            const data = getListData();
+            const csv = ['SR,DATED,DEPARTMENT,TYPE,ITEM NAME,REQ QNTY,QNTY TYPE,REMARKS'].concat(data.map(row => row.join(','))).join('\n');
+            const mailto = `mailto:vikram.singh@hindterminals.com?subject=Request%20List&body=Please%20find%20the%20list%20attached.%0A%0A${encodeURIComponent(csv)}`;
+            window.location.href = mailto;
+        }
+
+        function downloadFile(content, fileName, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
