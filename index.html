@@ -7,7 +7,9 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .item-row { margin: 10px 0; }
-        button { margin: 5px; }
+        button { margin: 5px; padding: 5px 10px; }
+        input, select { margin: 5px; padding: 5px; }
+        h1, h2 { color: #333; }
     </style>
 </head>
 <body>
@@ -38,7 +40,28 @@
                 <option value="Pen Stand">Pen Stand</option>
                 <option value="Pencils">Pencils</option>
                 <option value="Permanent Markers">Permanent Markers</option>
-                <!-- Add all items from your master list here -->
+                <option value="Printer Ink/Toner">Printer Ink/Toner</option>
+                <option value="Push Pins">Push Pins</option>
+                <option value="Ring Binders">Ring Binders</option>
+                <option value="Rubber Bands">Rubber Bands</option>
+                <option value="Ruler">Ruler</option>
+                <option value="Scissors">Scissors</option>
+                <option value="Sharpeners">Sharpeners</option>
+                <option value="Stapler">Stapler</option>
+                <option value="Stapler Pins">Stapler Pins</option>
+                <option value="Sticky Labels">Sticky Labels</option>
+                <option value="Sticky Notes">Sticky Notes</option>
+                <option value="Tape Dispenser">Tape Dispenser</option>
+                <option value="Thumb Tacks">Thumb Tacks</option>
+                <option value="Transparent Sheet Protectors">Transparent Sheet Protectors</option>
+                <option value="Transparent Tape">Transparent Tape</option>
+                <option value="USB Drives">USB Drives</option>
+                <option value="Visitor Log Book">Visitor Log Book</option>
+                <option value="Wall Calendar">Wall Calendar</option>
+                <option value="Whiteboard">Whiteboard</option>
+                <option value="Whiteboard Duster">Whiteboard Duster</option>
+                <option value="Whiteboard Markers">Whiteboard Markers</option>
+                <option value="Binder Clips">Binder Clips</option>
             </select>
             <input class="req-qnty" placeholder="Req Qty" />
             <select class="qnty-type">
@@ -62,13 +85,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        const masterData = {
-            departments: ['WAREHOUSE', 'Gate', 'Rail Ops', 'Doc Cell', 'Admin', 'Security'],
-            types: ['STATIONERY ITEM'],
-            itemNames: ['Paper Punch', 'Pen Stand', 'Pencils', 'Permanent Markers', /* Add all items */],
-            qntyTypes: ['PCS', 'Ltr', 'DZN', 'Pair', 'KG']
-        };
-
         function addItem() {
             const itemsDiv = document.getElementById('items');
             const newRow = itemsDiv.children[0].cloneNode(true);
