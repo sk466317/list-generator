@@ -17,8 +17,12 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #4CAF50; color: white; }
-        .footer { margin-top: 20px; display: flex; justify-content: space-between; }
+        .footer { margin-top: 60px; display: flex; justify-content: space-between; } /* Increased spacing */
         .footer div { border: 1px solid #ccc; padding: 10px; width: 45%; }
+        @media print {
+            .buttons { display: none; } /* Hide buttons when printing */
+            .input-group { display: none; } /* Hide input fields when printing */
+        }
     </style>
 </head>
 <body>
@@ -102,11 +106,11 @@
             </thead>
             <tbody></tbody>
         </table>
-        <div>
+        <div class="buttons">
             <button onclick="generateCSV()">Generate CSV</button>
-            <button onclick="generateExcel()">Generate Excel</button>
-            <button onclick="printList()">Print</button>
+            <button onclick="printAndDownloadExcel()">Print</button>
             <button onclick="emailList()">Email</button>
+            <button onclick="resetForm()">Reset</button>
         </div>
     </div>
 
@@ -163,11 +167,13 @@
             `;
             tableBody.appendChild(row);
 
-            // Clear item inputs for next entry
+            // Clear item inputs and increment SR for next entry
             document.getElementById('item-name').value = '';
             document.getElementById('req-qnty').value = '';
             document.getElementById('qnty-type').value = '';
             document.getElementById('remarks').value = '';
+            srCounter++;
+            document.getElementById('sr').value = srCounter;
         }
 
         function getListData() {
@@ -180,20 +186,33 @@
             const data = getListData().map(row => row.join(','));
             const csv = headers.concat(data).join('\n');
             downloadFile(csv, 'requisition.csv', 'text/csv');
-            resetForm();
         }
 
-        function generateExcel() {
+        function printAndDownloadExcel() {
+            const datedRaw = document.getElementById('dated').value;
+            const formattedDate = formatDate(datedRaw);
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet([['SR', 'DATED', 'DEPARTMENT', 'TYPE', 'ITEM NAME', 'REQ QNTY', 'QNTY TYPE', 'REMARKS']].concat(getListData()));
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['Hind Terminals Pvt Ltd, ICD Kilaraipur, Ludhiana Punjab'],
+                [`Date: ${formattedDate}`],
+                ['Requisition Form for Stationery Items'],
+                [],
+                ['SR', 'DATED', 'DEPARTMENT', 'TYPE', 'ITEM NAME', 'REQ QNTY', 'QNTY TYPE', 'REMARKS']
+            ].concat(getListData()));
+
+            // Add borders to headers and data
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = 0; R <= range.e.r; R++) {
+                for (let C = 0; C <= range.e.c; C++) {
+                    const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                    if (!cell) continue;
+                    cell.s = { border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } } };
+                }
+            }
+
             XLSX.utils.book_append_sheet(wb, ws, 'Requisition');
             XLSX.writeFile(wb, 'requisition.xlsx');
-            resetForm();
-        }
-
-        function printList() {
             window.print();
-            resetForm();
         }
 
         function emailList() {
@@ -201,7 +220,6 @@
             const csv = ['SR,DATED,DEPARTMENT,TYPE,ITEM NAME,REQ QNTY,QNTY TYPE,REMARKS'].concat(data.map(row => row.join(','))).join('\n');
             const mailto = `mailto:vikram.singh@hindterminals.com?subject=Requisition%20Form%20-%20Stationery%20Items&body=Please%20find%20the%20requisition%20list%20attached.%0A%0A${encodeURIComponent(csv)}`;
             window.location.href = mailto;
-            resetForm();
         }
 
         function downloadFile(content, fileName, mimeType) {
@@ -215,7 +233,7 @@
         }
 
         function resetForm() {
-            srCounter++;
+            srCounter = 1; // Reset to 1 or keep incrementing based on preference
             document.getElementById('sr').value = srCounter;
             document.getElementById('dated').value = '';
             document.getElementById('department').value = '';
